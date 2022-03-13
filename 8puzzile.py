@@ -82,26 +82,14 @@ def initiateGrid():
     """
     cursor = font.render("_",1,BLACK)
     cell = [rec.x,rec.y]
-    drawn = False
     c = 0
+    drawBG()
     while len(currentGrid) < 9:
         time.Clock().tick(60)
         k = event.get([KEYDOWN,QUIT])
-        ts = time.get_ticks()
         while len(k) < 1:
-            te = time.get_ticks() - ts
-            if not drawn and te > 500:
-                screen.blit(cursor,(cell[0]+45,cell[1]))
-                display.update()
-                drawn = True
-                ts = time.get_ticks()
-            elif drawn and te > 500:
-                draw.rect(screen,GREY,rec)
-                screen.blit(grid,(150,50))
-                display.update()
-                drawn = False
-                ts = time.get_ticks()
-            drawIncGrid()
+            screen.blit(cursor,(cell[0]+45,cell[1]))
+            display.update()
             k = event.get([KEYDOWN,QUIT])
         for ev in k:
             if ev.type == QUIT:
@@ -116,8 +104,7 @@ def initiateGrid():
                         cell[0] = rec.x
                         cell[1] += 167
                         c = 0
-        drawn = False
-    display.update()
+            drawIncGrid()
 
 def drawBG():
     """
