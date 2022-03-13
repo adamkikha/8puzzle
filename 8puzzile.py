@@ -6,10 +6,10 @@ class State():
         self.currentGrid = currentGrid
         self.pastMoves = pastMoves
 
-font.init()
 pastMoves = list
 currentGrid = []
 frontier = list
+font.init()
 font = font.SysFont("calibri",167)
 BLACK = (0,0,0)
 GREY = (100,100,100)
@@ -26,7 +26,7 @@ def move(key) -> bool:
 
 def initiateGrid():
     """
-    takes inut from user to initiate the grid for the first time
+    takes input from user to initiate the grid for the first time
     """
     cursor = font.render("_",1,BLACK)
     cell = [rec.x,rec.y]
@@ -44,7 +44,7 @@ def initiateGrid():
                 drawn = True
                 ts = time.get_ticks()
             elif drawn and te > 500:
-                redraw()
+                drawBG()
                 drawscreen()
                 drawn = False
                 ts = time.get_ticks()
@@ -52,7 +52,7 @@ def initiateGrid():
         for ev in k:
             if ev.type == QUIT:
                 stop()
-            elif ev.key < 58 and ev.key > 47 :
+            elif ev.key < 57 and ev.key > 47 :
                 num = ev.key - 48
                 if currentGrid.count(num) == 0:
                     currentGrid.append(num)
@@ -65,7 +65,7 @@ def initiateGrid():
         drawn = False
     display.update()
 
-def redraw():
+def drawBG():
     """
     redraws the basic background elements of the window
     """
@@ -83,7 +83,7 @@ def stop():
     sys.exit()
 
 def drawscreen():
-    redraw()
+    #drawBG()
     cell = [rec.x,rec.y]
     c = 0
     for num in currentGrid:
@@ -111,4 +111,5 @@ rec = Rect(150,50,500,500)
 display.set_caption("8puzzle")
 initiateGrid()
 while True:
+    time.Clock().tick(60)
     drawscreen()
