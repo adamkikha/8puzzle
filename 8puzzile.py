@@ -1,5 +1,4 @@
 from array import array
-from os import system
 import sys
 from pygame import *
 class State():
@@ -72,7 +71,7 @@ def redraw():
     """
     screen.fill((WHITE))
     draw.rect(screen,GREY,rec)
-    screen.blit(image.load("F://8puzzile/Grid.png"),(150,50))
+    screen.blit(image.load("Grid.png"),(150,50))
     display.update()
 
 def stop():
