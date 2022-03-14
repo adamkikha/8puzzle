@@ -1,5 +1,5 @@
 from array import array
-from ast import Return
+from ast import Compare, Return
 from random import randint
 import sys
 from pygame import *
@@ -8,6 +8,7 @@ class State():
         self.currentGrid = currentGrid
         self.pastMoves = pastMoves
 
+goal = [0,1,2,3,4,5,6,7,8]
 pastMoves = list
 currentGrid = []
 frontier = list
@@ -173,6 +174,22 @@ def drawGrid(blank: int,num: int) -> None:
 def swap(a: int,b: int) -> None:
     currentGrid[a] , currentGrid[b] = currentGrid[b] , currentGrid[a]
 
+def win():
+    i = 0
+    j = 255
+    k = 150
+    bg = (0,0,0)
+    while True:
+        screen.fill((bg))
+        time.wait(200)
+        display.update()
+        i = (1 + i) % 255
+        j = (1 + j) % 255
+        k = (1 + k) % 255
+        bg = (i,j,k) 
+        for ev in event.get(QUIT):
+            stop()
+
 init()
 screen = display.set_mode((800,600))
 rec = Rect(150,50,500,500)
@@ -182,6 +199,14 @@ screen.fill((WHITE))
 initiateGrid()
 while True:
     time.Clock().tick(60)
+    won = True
+    i = 0   
+    while i < 9:
+        if currentGrid[i] != goal[i]:
+            won = False
+            break
+    if won:
+        win()
     for ev in event.get([QUIT,KEYDOWN]):
         if ev.type == QUIT:
             stop()
