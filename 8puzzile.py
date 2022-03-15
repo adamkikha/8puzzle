@@ -1,12 +1,14 @@
 from random import randint
 import sys
+from tkinter import messagebox
 from pygame import *
 from SearchAgent import *
+import tkinter
 
 def move(key) -> bool:
     """
     moves the blank tile in the desired direction if it is possible
-    
+    and appends it to state.pastMoves
     returns: False if the move can't be played
                  True otherwise
     """
@@ -16,52 +18,53 @@ def move(key) -> bool:
     if key == K_UP:
         if blank - 3 > -1:
             num = blank - 3
-            swap(blank,num)
+            switchState(blank,num)
             moved = True
-    if key == K_DOWN: 
+    elif key == K_DOWN: 
         if blank + 3 < 9:
             num = blank + 3
-            swap(blank,num)
+            switchState(blank,num)
             moved = True
-    if blank < 3:
+    elif blank < 3:
         if key == K_LEFT:
             if blank - 1 > -1:
                 num = blank - 1
-                swap(blank,num)
+                switchState(blank,num)
                 moved = True
-        if key == K_RIGHT:
+        elif key == K_RIGHT:
             if blank + 1 < 3:
                 num = blank + 1
-                swap(blank,num)
+                switchState(blank,num)
                 moved = True
     elif blank < 6:
         if key == K_LEFT:
             if blank - 1 > 2:
                 num = blank - 1
-                swap(blank,num)
+                switchState(blank,num)
                 moved = True
-        if key == K_RIGHT:
+        elif key == K_RIGHT:
             if blank + 1 < 6:
                 num = blank + 1
-                swap(blank,num)
+                switchState(blank,num)
                 moved = True
     elif blank < 9:
         if key == K_LEFT:
             if blank - 1 > 5:
                 num = blank - 1
-                swap(blank,num)
+                switchState(blank,num)
                 moved = True
-        if key == K_RIGHT:
+        elif key == K_RIGHT:
             if blank + 1 < 9:
                 num = blank + 1
-                swap(blank,num)
+                switchState(blank,num)
                 moved = True
     if moved:
+        state.pastMoves.append[key]
         drawSwap(num,blank)
         return True
     return False
 
-def initiateGrid(state , option: int = 0):
+def initiateGrid(option: int = 0):
     """
     takes input from user or uses a rng to initiate the grid for the first time
     """
@@ -92,9 +95,9 @@ def initiateGrid(state , option: int = 0):
                         cell[0] = rec.x
                         cell[1] += 167
                         c = 0
-    state.grid = tempGrid
-    state.blank = tempGrid.index(0)
-    state.pastmoves = []
+    global state
+    state = State(tuple(tempGrid),tempGrid.index(0),[])  
+    state.isExplored()                  
 
 def stop():
     """
@@ -137,9 +140,13 @@ def drawSwap(blank: int,num: int) -> None:
     draw.rect(screen,(GREY),Rect(cellb[0]+10,cellb[1]+10,152,152))
     display.update()
 
-def swap(a: int,b: int) -> None:
-    state.grid[a] , state.grid[b] = state.grid[b] , state.grid[a]
-
+def switchState(blank: int,num: int) -> None:
+    global state 
+    l = list(state.grid)
+    l[blank] , l[num] = l[num] , l[blank]
+    state = State(tuple(l),state.pastMoves,num)
+    if state.isExplored():
+        messagebox.showwarning("RAKEZ!","El3ab 3edel enta kont hena abl keda")
 def won():
     i = 0
     j = 200
@@ -183,7 +190,7 @@ rec = Rect(150,50,500,500)
 grid = image.load("Grid.png").convert_alpha()
 display.set_caption("8puzzle")
 screen.fill((WHITE))
-initiateGrid(state)
+initiateGrid()
 while True:
     time.Clock().tick(60)
     for ev in event.get([QUIT,KEYDOWN]):
