@@ -1,22 +1,7 @@
-from array import array
-from ast import Compare, Return
 from random import randint
 import sys
 from pygame import *
-class State():
-    def __init__(self,currentGrid,pastMoves) -> None:
-        self.currentGrid = currentGrid
-        self.pastMoves = pastMoves
-
-goal = [0,1,2,3,4,5,6,7,8]
-pastMoves = list
-currentGrid = []
-frontier = list
-font.init()
-font = font.SysFont("calibri",167)
-BLACK = (0,0,0)
-GREY = (100,100,100)
-WHITE = (255,255,255)
+from SearchAgent import *
 
 def move(key) -> bool:
     """
@@ -26,7 +11,7 @@ def move(key) -> bool:
                  True otherwise
     """
     moved = False
-    blank = currentGrid.index(0)
+    blank = state.grid.index(0)
     num = 0
     if key == K_UP:
         if blank - 3 > -1:
@@ -72,48 +57,44 @@ def move(key) -> bool:
                 swap(blank,num)
                 moved = True
     if moved:
-        drawGrid(num,blank)
+        drawSwap(num,blank)
         return True
     return False
 
-
-def initiateGrid():
+def initiateGrid(state , option: int = 0):
     """
-    takes input from user to initiate the grid for the first time
+    takes input from user or uses a rng to initiate the grid for the first time
     """
-    cursor = font.render("_",1,BLACK)
+    cursor = fnt.render("_",1,BLACK)
     cell = [rec.x,rec.y]
     c = 0
-    drawBG()
-    while len(currentGrid) < 9:
+    draw.rect(screen,GREY,rec)
+    screen.blit(grid,(150,50))
+    tempGrid = []
+    while len(tempGrid) < 9:
         time.Clock().tick(60)
         k = event.get([KEYDOWN,QUIT])
+        screen.blit(cursor,(cell[0]+45,cell[1]))
+        display.update()
         while len(k) < 1:
-            screen.blit(cursor,(cell[0]+45,cell[1]))
-            display.update()
             k = event.get([KEYDOWN,QUIT])
         for ev in k:
             if ev.type == QUIT:
                 stop()
             elif ev.key < 57 and ev.key > 47 :
                 num = ev.key - 48
-                if currentGrid.count(num) == 0:
-                    currentGrid.append(num)
+                if tempGrid.count(num) == 0:
+                    tempGrid.append(num)
+                    drawTile(cell,num)
                     cell[0] += 167
                     c += 1
                     if c == 3:
                         cell[0] = rec.x
                         cell[1] += 167
                         c = 0
-            drawIncGrid()
-
-def drawBG():
-    """
-    redraws the basic background elements of the window
-    """
-    draw.rect(screen,GREY,rec)
-    screen.blit(grid,(150,50))
-    display.update()
+    state.grid = tempGrid
+    state.blank = tempGrid.index(0)
+    state.pastmoves = []
 
 def stop():
     """
@@ -125,35 +106,20 @@ def stop():
 
 #randint([0:8])
 
-def drawIncGrid():
-    cell = [rec.x,rec.y]
-    c = 0
-    for num in currentGrid:
-        time.Clock().tick(60)
-        tile = Rect(cell[0]+10,cell[1]+10,152,152)
-        if num > 0:
-            text = font.render(str(num),1,BLACK)
-            draw.rect(screen,(WHITE),tile)
-            screen.blit(text,(cell[0]+45,cell[1]+10))
-        else:
-            draw.rect(screen,(BLACK),tile)
-        display.update()
-        cell[0] += 167
-        c += 1
-        if c == 3:
-            cell[0] = rec.x
-            cell[1] += 167
-            c = 0
-    for ev in event.get([QUIT,KEYDOWN]):
-        if ev.type == QUIT:
-            stop()
-        elif ev.type == KEYDOWN and len(currentGrid) == 9:
-            move(ev.key)
-            
-def drawGrid(blank: int,num: int) -> None:
+def drawTile(cell,num):
+    tile = Rect(cell[0]+10,cell[1]+10,152,152)
+    if num > 0:
+        text = fnt.render(str(num),1,BLACK)
+        draw.rect(screen,(WHITE),tile)
+        screen.blit(text,(cell[0]+45,cell[1]+10))
+    else:
+        draw.rect(screen,(GREY),tile)
+    display.update()
+    
+def drawSwap(blank: int,num: int) -> None:
     cellb = [rec.x , rec.y]
     celln = [rec.x , rec.y]
-    text = font.render(str(currentGrid[num]),1,BLACK)
+    text = fnt.render(str(state.grid[num]),1,BLACK)
     while blank > 2:
         cellb[1] += 167
         blank -= 3
@@ -168,27 +134,48 @@ def drawGrid(blank: int,num: int) -> None:
         num -= 1
     draw.rect(screen,(WHITE),Rect(celln[0]+10,celln[1]+10,152,152))
     screen.blit(text,(celln[0]+45,celln[1]+10))
-    draw.rect(screen,(BLACK),Rect(cellb[0]+10,cellb[1]+10,152,152))
+    draw.rect(screen,(GREY),Rect(cellb[0]+10,cellb[1]+10,152,152))
     display.update()
 
 def swap(a: int,b: int) -> None:
-    currentGrid[a] , currentGrid[b] = currentGrid[b] , currentGrid[a]
+    state.grid[a] , state.grid[b] = state.grid[b] , state.grid[a]
 
-def win():
+def won():
     i = 0
-    j = 255
-    k = 150
+    j = 200
+    k = 100
     bg = (0,0,0)
+    fnt = font.SysFont("calibri",65)
     while True:
         screen.fill((bg))
-        time.wait(200)
+        screen.blit(fnt.render("MABROOOOK YA KOSOMAK!!!",1,BLACK),(0,250))
         display.update()
+        time.wait(6)
         i = (1 + i) % 255
         j = (1 + j) % 255
         k = (1 + k) % 255
-        bg = (i,j,k) 
+        bg = (i,j,k)
         for ev in event.get(QUIT):
             stop()
+
+def checkWin():
+    didWin = True
+    i = 0   
+    while i < 9:
+        if state.grid[i] != goal[i]:
+            didWin = False
+            break
+        i += 1
+    if didWin:
+        won()
+
+goal = [0,1,2,3,4,5,6,7,8]
+state = State
+font.init()
+fnt = font.SysFont("calibri",167)
+BLACK = (0,0,0)
+GREY = (100,100,100)
+WHITE = (255,255,255)
 
 init()
 screen = display.set_mode((800,600))
@@ -196,19 +183,12 @@ rec = Rect(150,50,500,500)
 grid = image.load("Grid.png").convert_alpha()
 display.set_caption("8puzzle")
 screen.fill((WHITE))
-initiateGrid()
+initiateGrid(state)
 while True:
     time.Clock().tick(60)
-    won = True
-    i = 0   
-    while i < 9:
-        if currentGrid[i] != goal[i]:
-            won = False
-            break
-    if won:
-        win()
     for ev in event.get([QUIT,KEYDOWN]):
         if ev.type == QUIT:
             stop()
-        elif ev.type == KEYDOWN and len(currentGrid) == 9:
+        elif ev.type == KEYDOWN:
             move(ev.key)
+            checkWin()
