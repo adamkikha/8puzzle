@@ -1,9 +1,8 @@
 from random import randint
-import sys
+from sys import exit
 from tkinter import messagebox
 from pygame import *
 from SearchAgent import *
-import tkinter
 
 def move(key) -> bool:
     """
@@ -59,44 +58,55 @@ def move(key) -> bool:
                 switchState(blank,num)
                 moved = True
     if moved:
-        state.pastMoves.append[key]
+        state.pastMoves.append(key)
         drawSwap(num,blank)
         return True
     return False
 
-def initiateGrid(option: int = 0):
+def initiateGrid(random: bool):
     """
     takes input from user or uses a rng to initiate the grid for the first time
     """
-    cursor = fnt.render("_",1,BLACK)
     cell = [rec.x,rec.y]
     c = 0
-    draw.rect(screen,GREY,rec)
-    screen.blit(grid,(150,50))
     tempGrid = []
-    while len(tempGrid) < 9:
-        time.Clock().tick(60)
-        k = event.get([KEYDOWN,QUIT])
-        screen.blit(cursor,(cell[0]+45,cell[1]))
-        display.update()
-        while len(k) < 1:
+    if not random:
+        cursor = fnt.render("_",1,BLACK)
+        while len(tempGrid) < 9:
+            time.Clock().tick(60)
             k = event.get([KEYDOWN,QUIT])
-        for ev in k:
-            if ev.type == QUIT:
-                stop()
-            elif ev.key < 57 and ev.key > 47 :
-                num = ev.key - 48
-                if tempGrid.count(num) == 0:
-                    tempGrid.append(num)
-                    drawTile(cell,num)
-                    cell[0] += 167
-                    c += 1
-                    if c == 3:
-                        cell[0] = rec.x
-                        cell[1] += 167
-                        c = 0
+            screen.blit(cursor,(cell[0]+45,cell[1]))
+            display.update()
+            while len(k) < 1:
+                k = event.get([KEYDOWN,QUIT])
+            for ev in k:
+                if ev.type == QUIT:
+                    stop()
+                elif ev.key < 57 and ev.key > 47 :
+                    num = ev.key - 48
+                    if tempGrid.count(num) == 0:
+                        tempGrid.append(num)
+                        drawTile(cell,num)
+                        cell[0] += 167
+                        c += 1
+                        if c == 3:
+                            cell[0] = rec.x
+                            cell[1] += 167
+                            c = 0
+    else:
+        while(len(tempGrid)<9):
+            num = randint(0,8)
+            if tempGrid.count(num) == 0:
+                tempGrid.append(num)
+                drawTile(cell,num)
+                cell[0] += 167
+                c += 1
+                if c == 3:
+                    cell[0] = rec.x
+                    cell[1] += 167
+                    c = 0
     global state
-    state = State(tuple(tempGrid),tempGrid.index(0),[])  
+    state = State(tuple(tempGrid),list(),tempGrid.index(0))  
     state.isExplored()                  
 
 def stop():
@@ -105,9 +115,7 @@ def stop():
     """
     display.quit()
     quit()
-    sys.exit()
-
-#randint([0:8])
+    exit()
 
 def drawTile(cell,num):
     tile = Rect(cell[0]+10,cell[1]+10,152,152)
@@ -144,7 +152,8 @@ def switchState(blank: int,num: int) -> None:
     global state 
     l = list(state.grid)
     l[blank] , l[num] = l[num] , l[blank]
-    state = State(tuple(l),state.pastMoves,num)
+    st = State(tuple(l),state.pastMoves,num)
+    state = st
     if state.isExplored():
         messagebox.showwarning("RAKEZ!","El3ab 3edel enta kont hena abl keda")
 def won():
@@ -190,7 +199,13 @@ rec = Rect(150,50,500,500)
 grid = image.load("Grid.png").convert_alpha()
 display.set_caption("8puzzle")
 screen.fill((WHITE))
-initiateGrid()
+draw.rect(screen,GREY,rec)
+screen.blit(grid,(150,50))
+display.update()
+random = False
+if messagebox.askyesno("initiation","randomly generate the grid?"):
+    random = True
+initiateGrid(random)
 while True:
     time.Clock().tick(60)
     for ev in event.get([QUIT,KEYDOWN]):
