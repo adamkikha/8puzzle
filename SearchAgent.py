@@ -9,16 +9,25 @@ class SearchAgent(ABC):
     def search(self,state):
         pass
 
+class DFS(SearchAgent):
+    pass
+
+class BFS(SearchAgent):
+    pass
+
+class AStar(SearchAgent):
+    pass
+
 class State:
     """
     Stores all data relevant to a specific grid state to facilitate searching
     """
     
-    states = dict() #explored states
+    states = set() #explored states
     
-    def __init__(self,grid: tuple ,pastMoves: list ,blank: int) -> None:
+    def __init__(self,grid: tuple ,parent ,blank: tuple) -> None:
         self.grid = grid
-        self.pastMoves = pastMoves
+        self.parent = parent
         self.blank = blank     
 
     def neighbours(self) -> Iterable:
@@ -30,7 +39,7 @@ class State:
         """
         hash = str(self.grid)
         if not hash in self.states:
-            State.states[hash] = self
+            State.states.add(hash)
             return False
         return True
             
