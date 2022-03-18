@@ -1,6 +1,15 @@
 from typing import Iterable
+from abc import ABC , abstractmethod
 
-class State():
+class SearchAgent(ABC):
+
+    frontier : Iterable
+    
+
+    def search(self,state):
+        pass
+
+class State:
     """
     Stores all data relevant to a specific grid state to facilitate searching
     """
@@ -19,15 +28,9 @@ class State():
         """
         checks if this state was already explored , if it wasn't it adds it to explored states
         """
-        hsh = hash(self.grid)
-        s = State.states.get(hsh,[])
-        if len(s) == 0:
-            State.states[hsh] = list([self])
-        else:
-            found = False
-            for st in s:
-                if st.grid == self.grid:
-                    return True
-            s.append(self)
+        hash = str(self.grid)
+        if not hash in self.states:
+            State.states[hash] = self
             return False
+        return True
             
