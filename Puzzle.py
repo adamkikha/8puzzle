@@ -1,4 +1,5 @@
-
+from typing import Tuple
+import numpy as np
 from random import randint
 from sys import exit
 from tkinter import messagebox
@@ -15,16 +16,14 @@ class Puzzle:
             self.num = num
 
         def swap(self,other):
-            self.x , other.x = other.x , self.x
-            self.y , other.y = other.y , self.y
             self.num , other.num = other.num , self.num
 
     BLACK , GREY , WHITE = (0,0,0) , (100,100,100) , (255,255,255)
     WIDTH , HEIGHT = 480 , 480
-    keys = ((-1,0),(1,0),(0,-1),(0,1))
-    goal = ((0,1,2),(3,4,5),(6,7,8))
+    keys = ((0,-1),(0,1),(-1,0),(1,0))
+    goal = np.array([[0,1,2],[3,4,5],[6,7,8]])
     state : State
-    Tiles = []
+    Tiles = np.zeros((3,3),Tile)
     screen : surface.Surface
     rec : Rect
     fnt : font
@@ -47,8 +46,23 @@ class Puzzle:
             random = True
         self.initiateGrid(random)
 
-    def availableMoves(self , blank , key = None) -> list:
-        pass
+    def availableMoves(self , blank: Tuple, keys = None | Tuple):
+        c = 0
+        i = 1
+        key = keys
+        if keys is None:
+            keys = self.keys
+            i = 4
+            key = keys[0]
+        aval_keys = []
+        while c < i:
+            num = ((blank[0]+key[0]),(blank[1]+key[1]))
+            if -1 < num[0] < 3 and -1 < num[1] < 3 :
+                aval_keys.append(key)
+            c += 1
+        if len(aval_keys) < 2:
+            return bool(aval_keys)
+        return aval_keys
 
     def move(self,key: tuple) -> bool:
         """
@@ -58,8 +72,8 @@ class Puzzle:
                     True otherwise
         """
         blank = self.state.blank
-        num = ((blank[0]+key[0]),(blank[1] + key[1]))
-        if (-1,-1) < num < (3,3):
+        if self.availableMoves(blank,key) :
+            num = ((blank[0]+key[0]),(blank[1] + key[1]))
             self.switchState(blank,num)
             self.drawSwap(num,blank)
             return True
@@ -69,17 +83,16 @@ class Puzzle:
         """
         takes input from user or uses a rng to initiate the grid for the first time
         """
-        cell = [self.rec.x,self.rec.y]
+        grid = np.full((3,3),-1,np.int8)
         c = 0
-        nums = [0,1,2,3,4,5,6,7,8]
-        tempRow = []
-        tempGrid = []
+        i = 0
+        j = 0
         if not random:
             cursor = self.fnt.render("_",1,self.BLACK)
-            while len(tempGrid) < 9:
+            while i < 9:
                 time.Clock().tick(60)
                 k = event.get([KEYDOWN,QUIT])
-                self.screen.blit(cursor,(cell[0]+35,cell[1]-10))
+                self.screen.blit(cursor,(self.rec.x+ 35 + (c*(self.WIDTH/3 + 4)),self.rec.y - 10 + (j*(self.HEIGHT/3 + 4))))
                 display.update()
                 while len(k) < 1:
                     k = event.get([KEYDOWN,QUIT])
@@ -88,42 +101,32 @@ class Puzzle:
                         self.stop()
                     elif ev.key < 57 and ev.key > 47 :
                         num = ev.key - 48
-                        if num in nums:
-                            nums.remove(num)
-                            tile = Puzzle.Tile(cell[0],cell[1],num)
-                            self.Tiles.append(tile)
-                            tempRow.append(num)
+                        if num not in grid:
+                            if num == 0:
+                                blank = (j,c)
+                            grid[j][c] = num
+                            tile = Puzzle.Tile(self.rec.x+ (c*(self.WIDTH/3 + 4)),self.rec.y + (j*(self.HEIGHT/3 + 4)),num)
+                            self.Tiles[j][c] = tile
                             self.drawTile(tile)
-                            cell[0] += self.WIDTH/3 + 4
-                            c += 1
-                            if c == 3:
-                                tempGrid.append(tuple(tempRow))
-                                tempRow=[]
-                                cell[0] = self.rec.x
-                                cell[1] += self.HEIGHT/3 + 4
-                                c = 0
+                            i += 1
+                            c = i % 3
+                            j = i // 3
         else:
             blank = None
-            while(len(tempGrid)<9):
+            while i < 9:
                 num = randint(0,8)
-                if num == 0 and blank is None:
-                    blank = (len(tempRow)-1,len(tempGrid)-1)
-                if num in nums :
-                    nums.remove(num)
-                    tempRow.append(num)
-                    tile = Puzzle.Tile(cell[0],cell[1],num)
-                    self.Tiles.append(tile)
+                if blank is None and num == 0:
+                    blank = (j,c)
+                if num not in grid :
+                    grid[j][c] = num
+                    tile = Puzzle.Tile(self.rec.x+ (c*(self.WIDTH/3 + 4)),self.rec.y + (j*(self.HEIGHT/3 + 4)),num)
+                    self.Tiles[j][c] = tile
                     self.drawTile(tile)
-                    cell[0] += self.WIDTH/3 + 4
-                    c += 1
-                    if c == 3:
-                        tempGrid.append(tuple(tempRow))
-                        tempRow=[]
-                        cell[0] = self.rec.x
-                        cell[1] += self.HEIGHT/3 + 4
-                        c = 0
+                    i += 1
+                    c = i % 3
+                    j = i // 3
 
-        self.state = State(tuple(tempGrid),list(),blank)  
+        self.state = State(grid,None,blank)  
         self.state.isExplored()
 
         self.getEvents()              
@@ -147,32 +150,18 @@ class Puzzle:
         display.update()
         
     def drawSwap(self,blank: tuple,num: tuple) -> None:
-        cellb = [self.rec.x , self.rec.y]
-        celln = [self.rec.x , self.rec.y]
-        text = self.fnt.render(str(self.state.grid[num]),1,self.BLACK)
-        while blank > 2:
-            cellb[1] += self.HEIGHT/3 + 4 
-            blank -= 3
-        while blank > 0:
-            cellb[0] += self.WIDTH/3 + 4
-            blank -= 1
-        while num > 2:
-            celln[1] += self.HEIGHT/3 + 4
-            num -= 3
-        while num > 0:
-            celln[0] += self.WIDTH/3 + 4
-            num -= 1
-        draw.rect(self.screen,(self.WHITE),Rect(celln[0],celln[1],153,153))
-        self.screen.blit(text,(celln[0]+35,celln[1]))
-        draw.rect(self.screen,(self.GREY),Rect(cellb[0],cellb[1],153,153))
-        display.update()
+        tile_b = self.Tiles[num]
+        tile_n = self.Tiles[blank]
+        tile_b.swap(tile_n)
+        self.drawTile(tile_n)
+        self.drawTile(tile_b)
 
-    def switchState(self,blank: int,num: int) -> None: 
-        l = list(self.state.grid)
+    def switchState(self,blank: tuple,num: tuple) -> None: 
+        l = self.state.grid
         l[blank] , l[num] = l[num] , l[blank]
-        self.state =  State(tuple(l),self,num)
-        self.state.isExplored()
-            #messagebox.showwarning("RAKEZ!","El3ab 3edel enta kont hena abl keda")
+        self.state =  State(l,self,num)
+        if self.state.isExplored():
+            messagebox.showwarning("RAKEZ!","El3ab 3edel enta kont hena abl keda")
 
 
     def won(self):
@@ -194,7 +183,7 @@ class Puzzle:
                 self.stop()
 
     def checkWin(self):   
-        if self.state.grid == self.goal:
+        if (self.state.grid == self.goal).all() :
             self.won()
 
     def getEvents(self):
@@ -203,6 +192,6 @@ class Puzzle:
             for ev in event.get([QUIT,KEYDOWN]):
                 if ev.type == QUIT:
                     self.stop()
-                elif ev.type == KEYDOWN:
+                elif ev.type == KEYDOWN and K_RIGHT <= ev.key <= K_UP:
                     self.move(self.keys[ev.key-K_RIGHT])
                     self.checkWin()
