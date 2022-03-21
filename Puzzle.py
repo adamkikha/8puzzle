@@ -1,4 +1,3 @@
-from typing import Tuple
 import numpy as np
 from random import randint
 from sys import exit
@@ -46,7 +45,7 @@ class Puzzle:
             random = True
         self.initiateGrid(random)
 
-    def availableMoves(self , blank: Tuple, keys = None | Tuple):
+    def availableMoves(self , blank: tuple, keys = None | tuple):
         c = 0
         i = 1
         key = keys
@@ -74,7 +73,7 @@ class Puzzle:
         blank = self.state.blank
         if self.availableMoves(blank,key) :
             num = ((blank[0]+key[0]),(blank[1] + key[1]))
-            self.switchState(blank,num)
+            self.state = self.switchState(blank,num)
             self.drawSwap(num,blank)
             return True
         return False
@@ -156,10 +155,12 @@ class Puzzle:
         self.drawTile(tile_n)
         self.drawTile(tile_b)
 
-    def switchState(self,blank: tuple,num: tuple) -> None: 
+    def switchState(self,blank: tuple,num: tuple,state : State = None) -> None: 
         l = self.state.grid
+        if state is not None:
+            l = state.grid
         l[blank] , l[num] = l[num] , l[blank]
-        self.state =  State(l,self,num)
+        return State(l,self,num)
         if self.state.isExplored():
             messagebox.showwarning("RAKEZ!","El3ab 3edel enta kont hena abl keda")
 
