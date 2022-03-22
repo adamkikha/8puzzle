@@ -19,31 +19,32 @@ class Puzzle:
 
     BLACK , GREY , WHITE = (0,0,0) , (100,100,100) , (255,255,255)
     WIDTH , HEIGHT = 480 , 480
-    goal = np.array([[0,1,2],[3,4,5],[6,7,8]])
     state : State
     Tiles = np.zeros((3,3),Tile)
     screen : surface.Surface
     rec : Rect
     fnt : font
 
+    def drawBG(self):
+        grid = image.load("Grid.png").convert_alpha()
+        self.screen.fill((self.WHITE))
+        draw.rect(self.screen,self.GREY,self.rec)
+        self.screen.blit(grid,(150,50))
+        display.update()
 
     def __init__(self) -> None:
         init()
         self.screen = display.set_mode((800,600))
         self.rec = Rect(160,59,self.WIDTH,self.HEIGHT)
-        grid = image.load("Grid.png").convert_alpha()
         display.set_caption("8puzzle")
         font.init()
         self.fnt = font.SysFont("calibri",167)
-        self.screen.fill((self.WHITE))
-        draw.rect(self.screen,self.GREY,self.rec)
-        self.screen.blit(grid,(150,50))
-        display.update()
+        self.drawBG()
         random = False
         if messagebox.askyesno("initiation","randomly generate the grid?"):
             random = True
         self.initiateGrid(random)
-
+        
     def move(self,key: tuple) -> bool:
         """
         moves the blank tile in the desired direction if it is possible
@@ -109,7 +110,6 @@ class Puzzle:
 
         self.state = State(grid,None,blank)  
         State.states.add(np.array_str(self.state.grid))
-        self.getEvents()              
 
     def stop(self):
         """
@@ -155,10 +155,6 @@ class Puzzle:
             for ev in event.get(QUIT):
                 self.stop()
 
-    def checkWin(self):   
-        if (self.state.grid == self.goal).all() :
-            self.won()
-
     def getEvents(self):
         while True:
             time.Clock().tick(60)
@@ -167,4 +163,4 @@ class Puzzle:
                     self.stop()
                 elif ev.type == KEYDOWN and K_RIGHT <= ev.key <= K_UP:
                     self.move(self.state.keys[ev.key-K_RIGHT])
-                    self.checkWin()
+                    self.state.checkWin()

@@ -1,64 +1,65 @@
-<<<<<<< HEAD
-from os import stat_result
-from sre_parse import State
 from typing import Iterable
-=======
->>>>>>> a34fdb52d6b0a106dba21fd73dbddd394d504bc0
 from abc import ABC , abstractmethod
 from typing import Iterable
-from numpy import array_str
-<<<<<<< HEAD
-import numpy
+from numpy import array_str , all , array
 from collections import deque
-from Puzzle import Puzzle
-=======
->>>>>>> a34fdb52d6b0a106dba21fd73dbddd394d504bc0
 class SearchAgent(ABC):
-
     frontier : Iterable
-    
+
+    def __init__(self,state) -> None:
+        super().__init__()
+        self.state = state
+
     @abstractmethod
     def search(self,state):
         pass
 
+    class Results:
+
+        def __init__(self,moves: list,found: bool,states: int) -> None:
+            self.moves = moves
+            self.found = found
+            self.states = states
+
 class DFS(SearchAgent):
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self,state) -> None:
+        super().__init__(state)
         self.frontier=deque([])
 
-    def search(self, state):
-        #return super().search(state)
-        self.frontier.append(state)
+    def search(self):
+        state = self.frontier.popleft()
+        State.states.add(state)
         while self.frontier :
-            State.isExplored()
-            if Puzzle.goal == state.grid :
-                return True
-      
-            for neighbour in State.neighbours():
-                if neighbour not in self.frontier and not state.isExplored():
+            State.states.add(self.frontier.pop())
+            if self.state.checkWin():
+                return SearchAgent.Results(state.backtrack(),True,len(State.states))
+
+            for neighbour in self.state.true_neighbours():
+                if neighbour not in self.frontier:
                     self.frontier.append(neighbour)
         return False
     
 
 class BFS(SearchAgent):
 
-    def __init__(self) -> None:
-        super().__init__()
-        self.frontier=deque([])
+    def __init__(self,state) -> None:
+        super().__init__(state)
+        self.frontier = deque([])
 
-    def  search(self, state):
-            #return super().search(state)
-            self.frontier.append(state)
-            while self.frontier :
-                State.states.append(self.frontier.pop)
-                if Puzzle.goal == state.grid :
-                    return True
+    def search(self):        
+        self.frontier.append(self.state)
+        while self.frontier :
+            print(len(State.states))
+            state = self.frontier.popleft()
+            State.states.add(state)
+            if state.checkWin():
+                return SearchAgent.Results(state.backtrack(),True,len(State.states))
       
-            for neighbour in State.neighbours():
-                if neighbour not in self.frontier and not state.isExplored():
+            for neighbour in self.state.true_neighbours():
+                if neighbour not in self.frontier:
                     self.frontier.append(neighbour)
-            return False
+        return False
              
 
 class AStar(SearchAgent):
@@ -71,17 +72,13 @@ class State:
     
     states = set() #explored states
     keys = ((0,-1),(0,1),(-1,0),(1,0))
+    goal = array([[0,1,2],[3,4,5],[6,7,8]])
 
     def __init__(self, grid ,parent ,blank: tuple) -> None:
         self.grid = grid
         self.parent = parent
         self.blank = blank
 
-<<<<<<< HEAD
-    def neighbours(self) -> Iterable:
-
-        pass
-=======
     def true_neighbours(self) -> list:
         aval_states = []
         for num in self.availableStates():
@@ -89,7 +86,6 @@ class State:
             if not state.isExplored():
                 aval_states.append(state)
         return aval_states
->>>>>>> a34fdb52d6b0a106dba21fd73dbddd394d504bc0
 
     def isExplored(self) -> bool:
         """
@@ -123,4 +119,15 @@ class State:
         blank = self.blank
         l[blank] , l[num] = l[num] , l[blank]
         return State(l,self,num)
-        
+
+    def checkWin(self):   
+        return (self.grid == self.goal).all()
+            
+    def backtrack(self):
+        st = self
+        moves = [st.blank]
+        while st.parent is not None:
+            st = st.parent
+            moves.append(st.blank)
+
+        return moves.reverse()
