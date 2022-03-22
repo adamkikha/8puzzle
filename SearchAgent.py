@@ -1,7 +1,11 @@
+from os import stat_result
+from sre_parse import State
 from typing import Iterable
 from abc import ABC , abstractmethod
 from numpy import array_str
 import numpy
+from collections import deque
+from Puzzle import Puzzle
 class SearchAgent(ABC):
 
     frontier : Iterable
@@ -11,10 +15,44 @@ class SearchAgent(ABC):
         pass
 
 class DFS(SearchAgent):
-    pass
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.frontier=deque([])
+
+    def search(self, state):
+        #return super().search(state)
+        self.frontier.append(state)
+        while self.frontier :
+            State.isExplored()
+            if Puzzle.goal == state.grid :
+                return True
+      
+            for neighbour in State.neighbours():
+                if neighbour not in self.frontier and not state.isExplored():
+                    self.frontier.append(neighbour)
+        return False
+    
 
 class BFS(SearchAgent):
-    pass
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.frontier=deque([])
+
+    def  search(self, state):
+            #return super().search(state)
+            self.frontier.append(state)
+            while self.frontier :
+                State.states.append(self.frontier.pop)
+                if Puzzle.goal == state.grid :
+                    return True
+      
+            for neighbour in State.neighbours():
+                if neighbour not in self.frontier and not state.isExplored():
+                    self.frontier.append(neighbour)
+            return False
+             
 
 class AStar(SearchAgent):
     pass
@@ -32,6 +70,7 @@ class State:
         self.blank = blank     
 
     def neighbours(self) -> Iterable:
+
         pass
 
     def isExplored(self) -> bool:
