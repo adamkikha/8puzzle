@@ -1,4 +1,3 @@
-from typing import Tuple
 import numpy as np
 from random import randint
 from sys import exit
@@ -20,7 +19,6 @@ class Puzzle:
 
     BLACK , GREY , WHITE = (0,0,0) , (100,100,100) , (255,255,255)
     WIDTH , HEIGHT = 480 , 480
-    keys = ((0,-1),(0,1),(-1,0),(1,0))
     goal = np.array([[0,1,2],[3,4,5],[6,7,8]])
     state : State
     Tiles = np.zeros((3,3),Tile)
@@ -46,24 +44,6 @@ class Puzzle:
             random = True
         self.initiateGrid(random)
 
-    def availableMoves(self , blank: Tuple, keys = None | Tuple):
-        c = 0
-        i = 1
-        key = keys
-        if keys is None:
-            keys = self.keys
-            i = 4
-            key = keys[0]
-        aval_keys = []
-        while c < i:
-            num = ((blank[0]+key[0]),(blank[1]+key[1]))
-            if -1 < num[0] < 3 and -1 < num[1] < 3 :
-                aval_keys.append(key)
-            c += 1
-        if len(aval_keys) < 2:
-            return bool(aval_keys)
-        return aval_keys
-
     def move(self,key: tuple) -> bool:
         """
         moves the blank tile in the desired direction if it is possible
@@ -72,10 +52,11 @@ class Puzzle:
                     True otherwise
         """
         blank = self.state.blank
-        if self.availableMoves(blank,key) :
+        if self.state.availableStates(key) :
             num = ((blank[0]+key[0]),(blank[1] + key[1]))
-            self.switchState(blank,num)
+            self.state = self.state.switchState(num)
             self.drawSwap(num,blank)
+            State.states.add(np.array_str(self.state.grid))
             return True
         return False
 
@@ -127,8 +108,7 @@ class Puzzle:
                     j = i // 3
 
         self.state = State(grid,None,blank)  
-        self.state.isExplored()
-
+        State.states.add(np.array_str(self.state.grid))
         self.getEvents()              
 
     def stop(self):
@@ -155,13 +135,6 @@ class Puzzle:
         tile_b.swap(tile_n)
         self.drawTile(tile_n)
         self.drawTile(tile_b)
-
-    def switchState(self,blank: tuple,num: tuple) -> None: 
-        l = self.state.grid
-        l[blank] , l[num] = l[num] , l[blank]
-        self.state =  State(l,self,num)
-        if self.state.isExplored():
-            messagebox.showwarning("RAKEZ!","El3ab 3edel enta kont hena abl keda")
 
 
     def won(self):
@@ -193,5 +166,5 @@ class Puzzle:
                 if ev.type == QUIT:
                     self.stop()
                 elif ev.type == KEYDOWN and K_RIGHT <= ev.key <= K_UP:
-                    self.move(self.keys[ev.key-K_RIGHT])
+                    self.move(self.state.keys[ev.key-K_RIGHT])
                     self.checkWin()
