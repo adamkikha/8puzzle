@@ -28,14 +28,15 @@ class DFS(SearchAgent):
         self.frontier=deque([])
 
     def search(self):
-        state = self.frontier.popleft()
-        State.states.add(state)
+        self.frontier.append(self.state)
         while self.frontier :
-            State.states.add(self.frontier.pop())
-            if self.state.checkWin():
+            print(len(State.states))
+            state = self.frontier.pop()
+            State.states.add(state)
+            if state.checkWin():
                 return SearchAgent.Results(state.backtrack(),True,len(State.states))
-
-            for neighbour in self.state.true_neighbours():
+      
+            for neighbour in state.true_neighbours():
                 if neighbour not in self.frontier:
                     self.frontier.append(neighbour)
         return False
@@ -56,7 +57,7 @@ class BFS(SearchAgent):
             if state.checkWin():
                 return SearchAgent.Results(state.backtrack(),True,len(State.states))
       
-            for neighbour in self.state.true_neighbours():
+            for neighbour in state.true_neighbours():
                 if neighbour not in self.frontier:
                     self.frontier.append(neighbour)
         return False
@@ -129,5 +130,5 @@ class State:
         while st.parent is not None:
             st = st.parent
             moves.append(st.blank)
-
-        return moves.reverse()
+        moves.reverse()
+        return moves
