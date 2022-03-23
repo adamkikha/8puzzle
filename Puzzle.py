@@ -61,6 +61,25 @@ class Puzzle:
             return True
         return False
 
+    def getInvCount(arr):
+    inversions = 0
+    empty_value = 0
+    for i in range(0, 9):
+        for j in range(i + 1, 9):
+            if arr[j] != empty_value and arr[i] != empty_value and arr[i] > arr[j]:
+                inversions += 1
+    return inversions
+
+    def solvable(array):
+        inversions = getInvCount(array)
+        return (inversions % 2 == 0)
+
+    def get_zero(array):
+        for i in range(len(array)):
+            if array[i] == 0:
+                return i
+        return -1
+
     def initiateGrid(self,random: bool):
         """
         takes input from user or uses a rng to initiate the grid for the first time
