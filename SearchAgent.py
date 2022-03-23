@@ -9,9 +9,10 @@ import heapq
 class SearchAgent(ABC):
     frontier : Iterable
 
-    def __init__(self,state) -> None:
+    def __init__(self,state,init) -> None:
         super().__init__()
         self.state = state
+        self.frontier = init([])
 
     @abstractmethod
     def search(self):
@@ -31,15 +32,14 @@ def timer(f):
 class DFS(SearchAgent):
 
     def __init__(self,state) -> None:
-        super().__init__(state)
-        self.frontier=deque([])
+        super().__init__(state,deque)
 
     def search(self):
         self.frontier.append(self.state)
         while self.frontier :
             print(len(State.states))
             state = self.frontier.pop()
-            State.states.add(state)
+            State.states.add(array_str(state.grid))
             if state.checkWin():
                 return SearchAgent.Results(state.backtrack(),True,len(State.states))
             neighbours = state.true_neighbours()
@@ -54,15 +54,14 @@ class DFS(SearchAgent):
 class BFS(SearchAgent):
 
     def __init__(self,state) -> None:
-        super().__init__(state)
-        self.frontier = deque([])
+        super().__init__(state,deque)
 
     def search(self):        
         self.frontier.append(self.state)
         while self.frontier :
             print(len(State.states))
             state = self.frontier.popleft()
-            State.states.add(state)
+            State.states.add(array_str(state.grid))
             if state.checkWin():
                 return SearchAgent.Results(state.backtrack(),True,len(State.states))
       
@@ -75,21 +74,20 @@ class BFS(SearchAgent):
 class AStar(SearchAgent):
 
     def __init__(self,state) -> None:
-        super().__init__(state)
-        self.frontier = list()
+        super().__init__(state,list)
 
     def search(self,type):
-        self.cost = 0
+        self.state.cost = 0
         heapq.heappush(self.frontier,self.state)
         while self.frontier:
             print(len(State.states))
             state = heapq.heappop(self.frontier)
-            State.states.add(state)
+            State.states.add(array_str(state.grid))
             if state.checkWin():
                 return SearchAgent.Results(state.backtrack(),True,len(State.states))
 
             for neighbour in state.true_neighbours():
-                neighbour.cost = self.cost + 1 + self.heu(neighbour,type)
+                neighbour.cost = self.state.cost + 1 + self.heu(neighbour,type)
                 if neighbour not in self.frontier:
                     heapq.heappush(self.frontier,neighbour)
                 else:
@@ -106,6 +104,8 @@ class AStar(SearchAgent):
             for i in range(3):
                 for j in range(3):
                     num = state.grid[i][j]
+                    if num == 0:
+                        continue
                     x = (num%3) - j
                     y = (num//3) - i
                     sum += abs(x) + abs(y)
@@ -113,6 +113,8 @@ class AStar(SearchAgent):
             for i in range(3):
                 for j in range(3):
                     num = state.grid[i][j]
+                    if num == 0:
+                        continue
                     x = (num%3) - j
                     y = (num//3) - i
                     sum += sqrt((x**2) + (y**2))
