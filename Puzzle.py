@@ -3,7 +3,7 @@ from random import randint
 from sys import exit
 from tkinter import messagebox
 from pygame import *
-from SearchAgent import State
+from SearchAgent import SearchAgent, State
 
 class Puzzle:
 
@@ -57,7 +57,7 @@ class Puzzle:
             num = ((blank[0]+key[0]),(blank[1] + key[1]))
             self.state = self.state.switchState(num)
             self.drawSwap(num,blank)
-            State.states.add(np.array_str(self.state.grid))
+            SearchAgent.states.add(np.array_str(self.state.grid))
             return True
         return False
 
@@ -109,7 +109,7 @@ class Puzzle:
                     j = i // 3
 
         self.state = State(grid,None,blank)  
-        State.states.add(np.array_str(self.state.grid))
+        SearchAgent.states.add(np.array_str(self.state.grid))
 
     def stop(self):
         """
@@ -156,15 +156,11 @@ class Puzzle:
                 self.stop()
 
     def getEvents(self):
-        while True:
-            time.Clock().tick(60)
-            for ev in event.get([QUIT,KEYDOWN]):
-                if ev.type == QUIT:
-                    self.stop()
-                elif ev.type == KEYDOWN and K_RIGHT <= ev.key <= K_UP:
-                    self.move(self.state.keys[ev.key-K_RIGHT])
-                    #for st in self.state.true_neighbours():
-                    #    print(st.blank)
-                    #print()
-                    if self.state.checkWin():
-                        self.won()
+        time.Clock().tick(60)
+        for ev in event.get([QUIT,KEYDOWN]):
+            if ev.type == QUIT:
+                self.stop()
+            elif ev.type == KEYDOWN and K_RIGHT <= ev.key <= K_UP:
+                self.move(SearchAgent.keys[ev.key-K_RIGHT])
+                if self.state.checkWin():
+                    self.won()

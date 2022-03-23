@@ -7,8 +7,10 @@ p = Puzzle()
 if messagebox.askyesno("play style","play by yourself? \nselect no to let the AI find the solution"):
     p.getEvents()
 else:
-    agent = SearchAgent.AStar(p.state)
-    res = agent.search(1)
+    agent = SearchAgent.DFS(p.state)
+    c = SearchAgent.timer(agent.search)
+    print(str(c[0])+" s")
+    res = c[1]
     s = "Total number of moves: " + str(len(res.moves)-1)
     if messagebox.askyesno("display moves","display solution moves?\n"+s):
         i = 0
@@ -16,4 +18,6 @@ else:
             p.drawSwap(res.moves[i],res.moves[i+1])
             sleep(1)
             i += 1
-    p.getEvents()
+            p.getEvents()
+    while True:
+        p.getEvents()

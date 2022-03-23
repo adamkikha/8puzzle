@@ -2,12 +2,15 @@ from math import sqrt
 from time import time
 from typing import Iterable
 from abc import ABC , abstractmethod
-from typing import Iterable
 from numpy import array_str , all , array
 from collections import deque
 import heapq
 class SearchAgent(ABC):
+
     frontier : Iterable
+    states = set() #explored states
+    keys = ((0,-1),(0,1),(-1,0),(1,0))
+    goal = array([[0,1,2],[3,4,5],[6,7,8]])
 
     def __init__(self,state,init) -> None:
         super().__init__()
@@ -26,9 +29,9 @@ class SearchAgent(ABC):
             self.states = states
 
 def timer(f):
-    ts = time.time()
+    ts = time()
     res = f()
-    return time.time()-ts , res
+    return time()-ts , res
 class DFS(SearchAgent):
 
     def __init__(self,state) -> None:
@@ -37,11 +40,11 @@ class DFS(SearchAgent):
     def search(self):
         self.frontier.append(self.state)
         while self.frontier :
-            print(len(State.states))
+            print(len(SearchAgent.states))
             state = self.frontier.pop()
-            State.states.add(array_str(state.grid))
+            SearchAgent.states.add(array_str(state.grid))
             if state.checkWin():
-                return SearchAgent.Results(state.backtrack(),True,len(State.states))
+                return SearchAgent.Results(state.backtrack(),True,len(SearchAgent.states))
             neighbours = state.true_neighbours()
             neighbours.reverse()
             for neighbour in neighbours:
@@ -59,11 +62,11 @@ class BFS(SearchAgent):
     def search(self):        
         self.frontier.append(self.state)
         while self.frontier :
-            print(len(State.states))
+            print(len(SearchAgent.states))
             state = self.frontier.popleft()
-            State.states.add(array_str(state.grid))
+            SearchAgent.states.add(array_str(state.grid))
             if state.checkWin():
-                return SearchAgent.Results(state.backtrack(),True,len(State.states))
+                return SearchAgent.Results(state.backtrack(),True,len(SearchAgent.states))
       
             for neighbour in state.true_neighbours():
                 if neighbour not in self.frontier:
@@ -80,11 +83,11 @@ class AStar(SearchAgent):
         self.state.cost = 0
         heapq.heappush(self.frontier,self.state)
         while self.frontier:
-            print(len(State.states))
+            print(len(SearchAgent.states))
             state = heapq.heappop(self.frontier)
-            State.states.add(array_str(state.grid))
+            SearchAgent.states.add(array_str(state.grid))
             if state.checkWin():
-                return SearchAgent.Results(state.backtrack(),True,len(State.states))
+                return SearchAgent.Results(state.backtrack(),True,len(SearchAgent.states))
 
             for neighbour in state.true_neighbours():
                 neighbour.cost = self.state.cost + 1 + self.heu(neighbour,type)
@@ -130,9 +133,7 @@ class State:
     Stores all data relevant to a specific grid state to facilitate searching
     """
     
-    states = set() #explored states
-    keys = ((0,-1),(0,1),(-1,0),(1,0))
-    goal = array([[0,1,2],[3,4,5],[6,7,8]])
+
 
     def __init__(self, grid ,parent ,blank: tuple) -> None:
         self.grid = grid
@@ -155,14 +156,14 @@ class State:
         checks if this state was already explored
         """
         hash = array_str(self.grid)
-        return hash in State.states
+        return hash in SearchAgent.states
         
 
     def availableStates(self , keys = None):
         i = 1
         key = keys
         if keys is None:
-            keys = self.keys
+            keys = SearchAgent.keys
             i = 4
             key = keys[0]
         aval_nums = []
@@ -184,7 +185,7 @@ class State:
         return State(l,self,num)
 
     def checkWin(self):
-        return (self.grid == self.goal).all()
+        return (self.grid == SearchAgent.goal).all()
             
     def backtrack(self):
         st = self
