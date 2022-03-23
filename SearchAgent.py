@@ -47,7 +47,8 @@ class DFS(SearchAgent):
             for neighbour in neighbours:
                 if neighbour not in self.frontier:
                     self.frontier.append(neighbour)
-        return False
+        return SearchAgent.Results([self.state.blank],False,0)
+
     
 
 class BFS(SearchAgent):
@@ -59,6 +60,7 @@ class BFS(SearchAgent):
     def search(self):        
         self.frontier.append(self.state)
         while self.frontier :
+            print(len(State.states))
             state = self.frontier.popleft()
             State.states.add(state)
             if state.checkWin():
@@ -67,7 +69,7 @@ class BFS(SearchAgent):
             for neighbour in state.true_neighbours():
                 if neighbour not in self.frontier:
                     self.frontier.append(neighbour)
-        return False
+        return SearchAgent.Results([self.state.blank],False,0)
              
 
 class AStar(SearchAgent):
@@ -92,7 +94,8 @@ class AStar(SearchAgent):
                     heapq.heappush(self.frontier,neighbour)
                 else:
                     self.decreaseKey(state,neighbour.cost,self.frontier.index(neighbour))
-        return False
+        return SearchAgent.Results([self.state.blank],False,0)
+
 
     def heu(self,state,type):
         """
@@ -178,7 +181,7 @@ class State:
         l[blank] , l[num] = l[num] , l[blank]
         return State(l,self,num)
 
-    def checkWin(self):   
+    def checkWin(self):
         return (self.grid == self.goal).all()
             
     def backtrack(self):

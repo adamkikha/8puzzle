@@ -26,7 +26,7 @@ class Puzzle:
     fnt : font
 
     def drawBG(self):
-        grid = image.load("Grid.png").convert_alpha()
+        grid = image.load("D:\Faculty\Term 6\AI\8puzzle\8puzzile\Grid.png").convert_alpha()
         self.screen.fill((self.WHITE))
         draw.rect(self.screen,self.GREY,self.rec)
         self.screen.blit(grid,(150,50))
@@ -163,4 +163,8 @@ class Puzzle:
                     self.stop()
                 elif ev.type == KEYDOWN and K_RIGHT <= ev.key <= K_UP:
                     self.move(self.state.keys[ev.key-K_RIGHT])
-                    self.state.checkWin()
+                    #for st in self.state.true_neighbours():
+                    #    print(st.blank)
+                    #print()
+                    if self.state.checkWin():
+                        self.won()
