@@ -1,8 +1,11 @@
+from math import sqrt
+from time import time
 from typing import Iterable
 from abc import ABC , abstractmethod
 from typing import Iterable
 from numpy import array_str , all , array
 from collections import deque
+import heapq
 class SearchAgent(ABC):
     frontier : Iterable
 
@@ -11,7 +14,7 @@ class SearchAgent(ABC):
         self.state = state
 
     @abstractmethod
-    def search(self,state):
+    def search(self):
         pass
 
     class Results:
@@ -21,6 +24,10 @@ class SearchAgent(ABC):
             self.found = found
             self.states = states
 
+def timer(f):
+    ts = time.time()
+    res = f()
+    return time.time()-ts , res
 class DFS(SearchAgent):
 
     def __init__(self,state) -> None:
@@ -35,8 +42,9 @@ class DFS(SearchAgent):
             State.states.add(state)
             if state.checkWin():
                 return SearchAgent.Results(state.backtrack(),True,len(State.states))
-      
-            for neighbour in state.true_neighbours():
+            neighbours = state.true_neighbours()
+            neighbours.reverse()
+            for neighbour in neighbours:
                 if neighbour not in self.frontier:
                     self.frontier.append(neighbour)
         return False
@@ -51,7 +59,6 @@ class BFS(SearchAgent):
     def search(self):        
         self.frontier.append(self.state)
         while self.frontier :
-            print(len(State.states))
             state = self.frontier.popleft()
             State.states.add(state)
             if state.checkWin():
@@ -64,8 +71,55 @@ class BFS(SearchAgent):
              
 
 class AStar(SearchAgent):
-    pass
 
+    def __init__(self,state) -> None:
+        super().__init__(state)
+        self.frontier = list()
+
+    def search(self,type):
+        self.cost = 0
+        heapq.heappush(self.frontier,self.state)
+        while self.frontier:
+            print(len(State.states))
+            state = heapq.heappop(self.frontier)
+            State.states.add(state)
+            if state.checkWin():
+                return SearchAgent.Results(state.backtrack(),True,len(State.states))
+
+            for neighbour in state.true_neighbours():
+                neighbour.cost = self.cost + 1 + self.heu(neighbour,type)
+                if neighbour not in self.frontier:
+                    heapq.heappush(self.frontier,neighbour)
+                else:
+                    self.decreaseKey(state,neighbour.cost,self.frontier.index(neighbour))
+        return False
+
+    def heu(self,state,type):
+        """
+        calculates heuristics for a given state
+        """
+        sum = 0
+        if type == 1:
+            for i in range(3):
+                for j in range(3):
+                    num = state.grid[i][j]
+                    x = (num%3) - j
+                    y = (num//3) - i
+                    sum += abs(x) + abs(y)
+        else:
+            for i in range(3):
+                for j in range(3):
+                    num = state.grid[i][j]
+                    x = (num%3) - j
+                    y = (num//3) - i
+                    sum += sqrt((x**2) + (y**2))
+        return sum
+
+    def decreaseKey(self,parent,cost: int,index: int):
+        state = self.frontier[index]
+        if state.cost > cost:
+            state.cost = cost
+            state.parent = parent
 class State:
     """
     Stores all data relevant to a specific grid state to facilitate searching
@@ -79,6 +133,9 @@ class State:
         self.grid = grid
         self.parent = parent
         self.blank = blank
+
+    def __lt__(self,other):
+        return self.cost < other.cost 
 
     def true_neighbours(self) -> list:
         aval_states = []
