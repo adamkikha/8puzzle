@@ -5,7 +5,8 @@ import SearchAgent
 
 p = Puzzle()
 if messagebox.askyesno("play style","play by yourself? \nselect no to let the AI find the solution"):
-    p.getEvents()
+    while True:
+        p.getEvents()
 else:
     agent = SearchAgent.DFS(p.state)
     c = SearchAgent.timer(agent.search)
