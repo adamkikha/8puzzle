@@ -1,9 +1,10 @@
 import numpy as np
 from random import randint
+import random
 from sys import exit
 from tkinter import messagebox
 from pygame import *
-from SearchAgent import SearchAgent, State
+from SearchAgent import SearchAgent, State, isSolvable
 
 class Puzzle:
 
@@ -44,7 +45,7 @@ class Puzzle:
         if messagebox.askyesno("initiation","randomly generate the grid?"):
             random = True
         self.initiateGrid(random)
-        
+
     def move(self,key: tuple) -> bool:
         """
         moves the blank tile in the desired direction if it is possible
@@ -60,19 +61,6 @@ class Puzzle:
             SearchAgent.states.add(np.array_str(self.state.grid))
             return True
         return False
-
-    def getInvCount(arr):
-    inversions = 0
-    empty_value = 0
-    for i in range(0, 9):
-        for j in range(i + 1, 9):
-            if arr[j] != empty_value and arr[i] != empty_value and arr[i] > arr[j]:
-                inversions += 1
-    return inversions
-
-    def solvable(array):
-        inversions = getInvCount(array)
-        return (inversions % 2 == 0)
 
     def get_zero(array):
         for i in range(len(array)):
@@ -114,21 +102,26 @@ class Puzzle:
                             j = i // 3
         else:
             blank = None
-            while i < 9:
-                num = randint(0,8)
+            grid = self.shuffle()
+            while not isSolvable(grid):
+                print("unsolvable! ",grid)
+                grid = self.shuffle()
+            
+            for i in range(9):
+                num = grid[i//3][i%3]
                 if blank is None and num == 0:
-                    blank = (j,c)
-                if num not in grid :
-                    grid[j][c] = num
-                    tile = Puzzle.Tile(self.rec.x+ (c*(self.WIDTH/3 + 4)),self.rec.y + (j*(self.HEIGHT/3 + 4)),num)
-                    self.Tiles[j][c] = tile
-                    self.drawTile(tile)
-                    i += 1
-                    c = i % 3
-                    j = i // 3
+                    blank = ((i//3),(i%3))
+                tile = Puzzle.Tile(self.rec.x + ((i%3)*(self.WIDTH/3 + 4)),self.rec.y + ((i//3)*(self.HEIGHT/3 + 4)), num)
+                self.drawTile(tile)
+                self.Tiles[(i//3)][(i%3)] = tile
 
-        self.state = State(grid,None,blank)  
+        self.state = State(grid,None,blank)
         SearchAgent.states.add(np.array_str(self.state.grid))
+
+    def shuffle(self):
+        grid = random.sample(range(9), 9)
+        grid = np.reshape(grid, (3, 3))
+        return grid
 
     def stop(self):
         """
@@ -147,7 +140,7 @@ class Puzzle:
         else:
             draw.rect(self.screen,(self.GREY),tile)
         display.update()
-        
+
     def drawSwap(self,blank: tuple,num: tuple) -> None:
         tile_b = self.Tiles[num]
         tile_n = self.Tiles[blank]
