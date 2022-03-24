@@ -28,7 +28,7 @@ class Puzzle:
 
     def drawBG(self):
         grid = image.load("Grid.png").convert_alpha()
-        self.screen.fill((self.WHITE))
+        #self.screen.fill((self.WHITE))
         draw.rect(self.screen,self.GREY,self.rec)
         self.screen.blit(grid,(150,50))
         display.update()
@@ -40,6 +40,8 @@ class Puzzle:
         display.set_caption("8puzzle")
         font.init()
         self.fnt = font.SysFont("calibri",167)
+        bg = image.load("BG.png")
+        self.screen.blit(bg,(0,0))
         self.drawBG()
         random = False
         if messagebox.askyesno("initiation","randomly generate the grid?"):
