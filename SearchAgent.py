@@ -52,8 +52,6 @@ class DFS(SearchAgent):
                     self.frontier.append(neighbour)
         return SearchAgent.Results([self.state.blank],False,0)
 
-    
-
 class BFS(SearchAgent):
 
     def __init__(self,state) -> None:
@@ -67,12 +65,11 @@ class BFS(SearchAgent):
             SearchAgent.states.add(array_str(state.grid))
             if state.checkWin():
                 return SearchAgent.Results(state.backtrack(),True,len(SearchAgent.states))
-      
+
             for neighbour in state.true_neighbours():
                 if neighbour not in self.frontier:
                     self.frontier.append(neighbour)
         return SearchAgent.Results([self.state.blank],False,0)
-             
 
 class AStar(SearchAgent):
 
@@ -128,12 +125,17 @@ class AStar(SearchAgent):
         if state.cost > cost:
             state.cost = cost
             state.parent = parent
+
+class Node:
+    def __init__(self, grid, parent, blank:tuple):
+        self.grid = grid
+        self.blank = blank
+        self.parent = parent
+
 class State:
     """
     Stores all data relevant to a specific grid state to facilitate searching
     """
-    
-
 
     def __init__(self, grid ,parent ,blank: tuple) -> None:
         self.grid = grid
@@ -157,7 +159,6 @@ class State:
         """
         hash = array_str(self.grid)
         return hash in SearchAgent.states
-        
 
     def availableStates(self , keys = None):
         i = 1
@@ -177,7 +178,7 @@ class State:
         if len(aval_nums) < 2:
             return bool(aval_nums)
         return aval_nums
-            
+
     def switchState(self,num: tuple):    
         l = self.grid.copy()
         blank = self.blank
@@ -186,7 +187,7 @@ class State:
 
     def checkWin(self):
         return (self.grid == SearchAgent.goal).all()
-            
+
     def backtrack(self):
         st = self
         moves = [st.blank]
@@ -195,3 +196,18 @@ class State:
             moves.append(st.blank)
         moves.reverse()
         return moves
+
+
+
+def getInvCount(arr):
+    inv_count = 0
+    empty_value = 0
+    for i in range(0, 9):
+        for j in range(i + 1, 9):
+            if arr[j] != empty_value and arr[i] != empty_value and arr[i] > arr[j]:
+                inv_count += 1
+    return inv_count
+
+def isSolvable(puzzle) :
+    inv_count = getInvCount([j for sub in puzzle for j in sub])
+    return (inv_count % 2 == 0)
