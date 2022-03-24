@@ -156,6 +156,8 @@ class AStar(SearchAgent):
         if state.cost > cost:
             state.cost = cost
             state.parent = parent
+
+
 class State:
     """
     Stores all data relevant to a specific grid state to facilitate searching
