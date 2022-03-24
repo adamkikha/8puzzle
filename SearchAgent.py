@@ -1,21 +1,29 @@
 from math import sqrt
-from time import time
+from threading import Thread
+from time import sleep, time
 from typing import Iterable
 from abc import ABC , abstractmethod
-from numpy import array_str , all , array
+from numpy import array2string , all , array, reshape
 from collections import deque
 import heapq
 
 class SearchAgent(ABC):
 
     frontier : Iterable
+    found = False
     states = set() #explored states
     keys = ((0,-1),(0,1),(-1,0),(1,0))
-    goal = array([[0,1,2],[3,4,5],[6,7,8]])
+    goal = "012345678"
+    goal2 = array([[0,1,2],[3,4,5],[6,7,8]])
 
     def __init__(self,state,init) -> None:
         super().__init__()
+        SearchAgent.puzzle = state
+        state = state.state
+        s = array2string(reshape(state.grid,-1),separator="")
+        state.grid = s[1:10]
         self.state = state
+        self.state.blank = self.state.blank[0]*3 + self.state.blank[1]
         self.frontier = init([])
 
     @abstractmethod
@@ -24,14 +32,18 @@ class SearchAgent(ABC):
 
     class Results:
 
-        def __init__(self,moves: list,found: bool,states: int) -> None:
+        def __init__(self,moves: list,found: bool,states: int,depth) -> None:
             self.moves = moves
             self.found = found
             self.states = states
+            self.depth = depth
 
-def timer(f):
+def timer(f,type=None):
     ts = time()
-    res = f()
+    if type is not None:
+        res = f(type)
+    else:
+        res = f()
     return time()-ts , res
 class DFS(SearchAgent):
 
@@ -39,38 +51,51 @@ class DFS(SearchAgent):
         super().__init__(state,deque)
 
     def search(self):
+        max_depth = 0
+        self.state.depth = 0        
         self.frontier.append(self.state)
+        Printer().start()
         while self.frontier :
-            print(len(SearchAgent.states))
             state = self.frontier.pop()
-            SearchAgent.states.add(array_str(state.grid))
-            if state.checkWin():
-                return SearchAgent.Results(state.backtrack(),True,len(SearchAgent.states))
+            if state.depth > max_depth:
+                max_depth = state.depth
+            SearchAgent.states.add(state.grid)
+            if state.grid == SearchAgent.goal:
+                SearchAgent.found = True
+                return SearchAgent.Results(state.backtrack(),True,len(SearchAgent.states),max_depth)
+
             neighbours = state.true_neighbours()
             neighbours.reverse()
             for neighbour in neighbours:
+                neighbour.depth = state.depth + 1
                 if neighbour not in self.frontier:
                     self.frontier.append(neighbour)
-        return SearchAgent.Results([self.state.blank],False,0)
+        return SearchAgent.Results([self.state.blank],False,0,0)
 
 class BFS(SearchAgent):
 
     def __init__(self,state) -> None:
         super().__init__(state,deque)
 
-    def search(self):        
+    def search(self):
+        max_depth = 0
+        self.state.depth = 0        
         self.frontier.append(self.state)
+        Printer().start()
         while self.frontier :
-            print(len(SearchAgent.states))
             state = self.frontier.popleft()
-            SearchAgent.states.add(array_str(state.grid))
-            if state.checkWin():
-                return SearchAgent.Results(state.backtrack(),True,len(SearchAgent.states))
+            if state.depth > max_depth:
+                max_depth = state.depth
+            SearchAgent.states.add(state.grid)
+            if state.grid == SearchAgent.goal:
+                SearchAgent.found = True
+                return SearchAgent.Results(state.backtrack(),True,len(SearchAgent.states),max_depth)
 
             for neighbour in state.true_neighbours():
+                neighbour.depth = state.depth + 1
                 if neighbour not in self.frontier:
                     self.frontier.append(neighbour)
-        return SearchAgent.Results([self.state.blank],False,0)
+        return SearchAgent.Results([self.state.blank],False,0,0)
 
 class AStar(SearchAgent):
 
@@ -78,22 +103,29 @@ class AStar(SearchAgent):
         super().__init__(state,list)
 
     def search(self,type):
-        self.state.cost = 0
-        heapq.heappush(self.frontier,self.state)
+        max_depth = 0
+        state = self.state
+        state.cost = 0
+        state.depth = 0
+        heapq.heappush(self.frontier,state)
+        Printer().start()
         while self.frontier:
-            print(len(SearchAgent.states))
             state = heapq.heappop(self.frontier)
-            SearchAgent.states.add(array_str(state.grid))
-            if state.checkWin():
-                return SearchAgent.Results(state.backtrack(),True,len(SearchAgent.states))
+            if state.depth > max_depth:
+                max_depth = state.depth
+            SearchAgent.states.add(state.grid)
+            if state.grid == SearchAgent.goal:
+                SearchAgent.found = True
+                return SearchAgent.Results(state.backtrack(),True,len(SearchAgent.states),max_depth)
 
             for neighbour in state.true_neighbours():
-                neighbour.cost = self.state.cost + 1 + self.heu(neighbour,type)
+                neighbour.cost = state.cost + 1 + self.heu(neighbour,type)
+                neighbour.depth = state.depth + 1
                 if neighbour not in self.frontier:
                     heapq.heappush(self.frontier,neighbour)
                 else:
                     self.decreaseKey(state,neighbour.cost,self.frontier.index(neighbour))
-        return SearchAgent.Results([self.state.blank],False,0)
+        return SearchAgent.Results([self.state.blank],False,0,0)
 
 
     def heu(self,state,type):
@@ -104,7 +136,7 @@ class AStar(SearchAgent):
         if type == 1:
             for i in range(3):
                 for j in range(3):
-                    num = state.grid[i][j]
+                    num = int(state.grid[i*3 +j])
                     if num == 0:
                         continue
                     x = (num%3) - j
@@ -113,7 +145,7 @@ class AStar(SearchAgent):
         else:
             for i in range(3):
                 for j in range(3):
-                    num = state.grid[i][j]
+                    num = int(state.grid[i*3 +j])
                     if num == 0:
                         continue
                     x = (num%3) - j
@@ -126,13 +158,6 @@ class AStar(SearchAgent):
         if state.cost > cost:
             state.cost = cost
             state.parent = parent
-
-class Node:
-    def __init__(self, grid, parent, blank:tuple):
-        self.grid = grid
-        self.blank = blank
-        self.parent = parent
-
 class State:
     """
     Stores all data relevant to a specific grid state to facilitate searching
@@ -148,8 +173,8 @@ class State:
 
     def true_neighbours(self) -> list:
         aval_states = []
-        for num in self.availableStates():
-            state = self.switchState(num)
+        for num in self.availableNodes():
+            state = self.newState(num)
             if not state.isExplored():
                 aval_states.append(state)
         return aval_states
@@ -158,46 +183,65 @@ class State:
         """
         checks if this state was already explored
         """
-        hash = array_str(self.grid)
+        hash = self.grid
         return hash in SearchAgent.states
 
-    def availableStates(self , keys = None):
-        i = 1
-        key = keys
-        if keys is None:
-            keys = SearchAgent.keys
-            i = 4
-            key = keys[0]
-        aval_nums = []
+    def availableNodes(self):
         blank = self.blank
-        for c in range(i):
-            num = ((blank[0]+key[0]),(blank[1]+key[1]))
-            if -1 < num[0] < 3 and -1 < num[1] < 3 :
-                aval_nums.append(num)
-            key = keys[(c % 3)+1]
+        aval_nodes = []
+        if blank - 3 > -1:
+            aval_nodes.append(blank - 3)
+        if blank + 3 < 9:
+                aval_nodes.append(blank + 3)
+        if blank < 3:
+            if blank - 1 > -1:
+                aval_nodes.append(blank - 1)
+            if blank + 1 < 3:
+                aval_nodes.append(blank + 1)
+        elif blank < 6:
+            if blank - 1 > 2:
+                aval_nodes.append(blank - 1)
+            if blank + 1 < 6:
+                aval_nodes.append(blank + 1)
+        elif blank < 9:
+            if blank - 1 > 5:
+                aval_nodes.append(blank - 1)
+            if blank + 1 < 9:
+                aval_nodes.append(blank + 1)
+        return aval_nodes
 
-        if len(aval_nums) < 2:
-            return bool(aval_nums)
-        return aval_nums
 
-    def switchState(self,num: tuple):    
-        l = self.grid.copy()
+    def isavailable(self , key):
         blank = self.blank
+        num = ((blank[0]+key[0]),(blank[1]+key[1]))
+        if -1 < num[0] < 3 and -1 < num[1] < 3 :
+            return True
+        return False
+
+    def newState(self,num):    
+        blank = self.blank
+        l = list(self.grid)
         l[blank] , l[num] = l[num] , l[blank]
+        l = "".join(l)
         return State(l,self,num)
-
-    def checkWin(self):
-        return (self.grid == SearchAgent.goal).all()
 
     def backtrack(self):
         st = self
-        moves = [st.blank]
+        blank = (st.blank//3,st.blank%3)
+        moves = [blank]
         while st.parent is not None:
             st = st.parent
-            moves.append(st.blank)
+            blank = (st.blank//3,st.blank%3)
+            moves.append(blank)
         moves.reverse()
         return moves
 
+class Printer(Thread):
+
+    def run(self):
+        while not SearchAgent.found:
+            print(len(SearchAgent.states))
+            SearchAgent.puzzle.checkQuit()
 
 
 def getInvCount(arr):

@@ -71,19 +71,12 @@ class Puzzle:
                     True otherwise
         """
         blank = self.state.blank
-        if self.state.availableStates(key) :
+        if self.state.isavailable(key) :
             num = ((blank[0]+key[0]),(blank[1] + key[1]))
-            self.state = self.state.switchState(num)
+            self.state = self.switchState(num)
             self.drawSwap(num,blank)
-            SearchAgent.states.add(np.array_str(self.state.grid))
             return True
         return False
-
-    def get_zero(array):
-        for i in range(len(array)):
-            if array[i] == 0:
-                return i
-        return -1
 
     def initiateGrid(self,random: bool):
         """
@@ -183,6 +176,19 @@ class Puzzle:
             for ev in event.get(QUIT):
                 self.stop()
 
+    def checkWin(self):
+        return (self.state.grid == SearchAgent.goal2).all()
+
+    def switchState(self,num):
+        blank = self.state.blank
+        l = self.state.grid.copy()
+        l[blank] , l[num] = l[num] , l[blank]
+        return State(l,self.state,num)
+
+    def checkQuit(self):
+        if event.get([QUIT]):
+            self.stop()
+
     def getEvents(self):
         time.Clock().tick(60)
         for ev in event.get([QUIT,KEYDOWN]):
@@ -190,5 +196,5 @@ class Puzzle:
                 self.stop()
             elif ev.type == KEYDOWN and K_RIGHT <= ev.key <= K_UP:
                 self.move(SearchAgent.keys[ev.key-K_RIGHT])
-                if self.state.checkWin():
+                if self.checkWin():
                     self.won()
