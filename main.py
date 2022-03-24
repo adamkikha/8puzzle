@@ -186,6 +186,7 @@ else:
         c = SearchAgent.timer(agent.search)
         print(str(c[0])+" s")
         res = c[1]
+        print("Max depth: ",res.depth)
         s = "Total number of moves: " + str(len(res.moves)-1)
         if messagebox.askyesno("display moves","display solution moves?\n"+s):
             i = 0
@@ -193,7 +194,7 @@ else:
                 p.drawSwap(res.moves[i],res.moves[i+1])
                 sleep(1)
                 i += 1
-                p.getEvents()
+                p.checkQuit()
         while True:
-            p.getEvents()
+            p.checkQuit()
 
