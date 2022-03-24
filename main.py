@@ -1,5 +1,5 @@
 from time import sleep
-from tkinter import messagebox
+import tkinter as tk
 from Puzzle import Puzzle
 import SearchAgent
 import pygame
@@ -9,6 +9,10 @@ SCREEN_WIDTH = 600
 SCREEN_HEIGHT = 600
 BUTTON_WIDTH = 400
 BUTTON_HEIGHT = 100
+SIDES_PADDING = 10
+INBTWN_SPACE = 1
+PUZZLE_WIDTH = (SCREEN_WIDTH - (2*SIDES_PADDING))
+
 BACK_GRND_COLOR = (255,255,255)
 RED = (123,44,130)
 bg = pygame.image.load("BG.png")
@@ -183,17 +187,32 @@ else:
             A_Star_window()
             p = Puzzle(game_screen, generate_random, bg)
             agent = SearchAgent.AStar(p.state)
-        c = SearchAgent.timer(agent.search)
-        print(str(c[0])+" s")
+        
+        c = SearchAgent.timer(agent.search, A_star_type)
+        
         res = c[1]
+        print("Time: "+str(c[0])+" s")
+        print("Max depth: ",res.depth)
         s = "Total number of moves: " + str(len(res.moves)-1)
-        if messagebox.askyesno("display moves","display solution moves?\n"+s):
+        time = round(c[0], 5)
+        witdth = (PUZZLE_WIDTH-(2*INBTWN_SPACE))//3
+        time_text = Button(10, 10, witdth, BUTTON_HEIGHT-60, RED," Time: "+str(time)+ "s",BACK_GRND_COLOR,text_size-10)
+        time_text.draw(p.screen)
+        Max_depth_text = Button(10+ witdth+INBTWN_SPACE, 10, witdth, BUTTON_HEIGHT-60, RED," Max depth: "+str(res.depth),BACK_GRND_COLOR,text_size-10)
+        Max_depth_text.draw(p.screen)
+        total_no_moves_text = Button(10+(2*witdth)+(2*INBTWN_SPACE), 10, witdth, BUTTON_HEIGHT-60, RED," # of explored: " + str(res.states),BACK_GRND_COLOR,text_size-10)
+        total_no_moves_text.draw(p.screen)
+        pygame.display.update()
+
+        root = tk.Tk()
+        root.withdraw()
+        if tk.messagebox.askyesno("Display moves","Display solution moves?\n"+s):
             i = 0
             while i+1 < len(res.moves):
                 p.drawSwap(res.moves[i],res.moves[i+1])
                 sleep(1)
                 i += 1
-                p.getEvents()
+                p.checkQuit()
         while True:
-            p.getEvents()
+            p.checkQuit()
 
