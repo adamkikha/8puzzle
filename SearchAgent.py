@@ -18,8 +18,6 @@ class SearchAgent(ABC):
 
     def __init__(self,state,init) -> None:
         super().__init__()
-        SearchAgent.puzzle = state
-        state = state.state
         s = array2string(reshape(state.grid,-1),separator="")
         state.grid = s[1:10]
         self.state = state
@@ -158,6 +156,8 @@ class AStar(SearchAgent):
         if state.cost > cost:
             state.cost = cost
             state.parent = parent
+
+
 class State:
     """
     Stores all data relevant to a specific grid state to facilitate searching
@@ -241,7 +241,7 @@ class Printer(Thread):
     def run(self):
         while not SearchAgent.found:
             print(len(SearchAgent.states))
-            SearchAgent.puzzle.checkQuit()
+
 
 
 def getInvCount(arr):
