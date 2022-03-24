@@ -8,10 +8,11 @@ if messagebox.askyesno("play style","play by yourself? \nselect no to let the AI
     while True:
         p.getEvents()
 else:
-    agent = SearchAgent.DFS(p.state)
-    c = SearchAgent.timer(agent.search)
+    agent = SearchAgent.AStar(p)
+    c = SearchAgent.timer(agent.search,1)
     print(str(c[0])+" s")
     res = c[1]
+    print("max depth: ",res.depth)
     s = "Total number of moves: " + str(len(res.moves)-1)
     if messagebox.askyesno("display moves","display solution moves?\n"+s):
         i = 0
