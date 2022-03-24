@@ -5,6 +5,7 @@ from abc import ABC , abstractmethod
 from numpy import array_str , all , array
 from collections import deque
 import heapq
+
 class SearchAgent(ABC):
 
     frontier : Iterable
@@ -73,7 +74,7 @@ class BFS(SearchAgent):
 
 class AStar(SearchAgent):
 
-    def __init__(self,state) -> None:
+    def __init__(self, state) -> None:
         super().__init__(state,list)
 
     def search(self,type):
