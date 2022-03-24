@@ -99,7 +99,7 @@ class BFS(SearchAgent):
 
 class AStar(SearchAgent):
 
-    def __init__(self,state) -> None:
+    def __init__(self, state) -> None:
         super().__init__(state,list)
 
     def search(self,type):

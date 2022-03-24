@@ -5,12 +5,11 @@ from sys import exit
 from tkinter import messagebox
 from pygame import *
 from SearchAgent import SearchAgent, State, isSolvable
-
+# from window import MyWindow
 class Puzzle:
 
     class Tile:
-
-        def __init__(self,x,y,num) -> None:
+        def __init__(self, x, y, num) -> None:
             self.x = x
             self.y = y
             self.num = num
@@ -19,32 +18,49 @@ class Puzzle:
             self.num , other.num = other.num , self.num
 
     BLACK , GREY , WHITE = (0,0,0) , (100,100,100) , (255,255,255)
-    WIDTH , HEIGHT = 480 , 480
+    SCREEN_WIDTH = 600
+    SCREEN_HEIGHT = 600
+    SIDES_PADDING = 10
+    UPPER_PADDING = 100
+    LOWER_PADDING = 20
+    INBTWN_SPACE = 1
+    PUZZLE_WIDTH = (SCREEN_WIDTH - (2*SIDES_PADDING))
+    PUZZLE_HEIGHT = (SCREEN_HEIGHT - (UPPER_PADDING+LOWER_PADDING))
+    PUZZLE_X_POS = SIDES_PADDING
+    PUZZLE_Y_POS = UPPER_PADDING
+    PUZZLE_COLOR = GREY
+    BACK_GRND_COLOR = WHITE
+    TILE_COLOR = (123,44,130)
+    
     state : State
     Tiles = np.zeros((3,3),Tile)
     screen : surface.Surface
-    rec : Rect
+    puzzle_BG_rect : Rect
     fnt : font
 
     def drawBG(self):
-        grid = image.load("Grid.png").convert_alpha()
-        self.screen.fill((self.WHITE))
-        draw.rect(self.screen,self.GREY,self.rec)
-        self.screen.blit(grid,(150,50))
+        # grid = image.load("Grid.png").convert_alpha()
+        # self.screen.fill((self.BACK_GRND_COLOR))
+        draw.rect(self.screen, self.PUZZLE_COLOR, self.puzzle_BG_rect)
+        # self.screen.blit(grid,(150,50))
         display.update()
 
-    def __init__(self) -> None:
+    def __init__(self, screen, random, bg) -> None:
         init()
-        self.screen = display.set_mode((800,600))
-        self.rec = Rect(160,59,self.WIDTH,self.HEIGHT)
-        display.set_caption("8puzzle")
+        # self.screen = display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+        self.screen = screen
+        # self.screen.fill(self.BACK_GRND_COLOR)
+        self.screen.blit(bg,(0,0))
+        self.puzzle_BG_rect = Rect(self.PUZZLE_X_POS, self.PUZZLE_Y_POS, self.PUZZLE_WIDTH, self.PUZZLE_HEIGHT)
+        # display.set_caption("8-puzzle")
+        # icon = image.load('logo.png')
+        # display.set_icon(icon)
+
         font.init()
         self.fnt = font.SysFont("calibri",167)
         self.drawBG()
-        random = False
-        if messagebox.askyesno("initiation","randomly generate the grid?"):
-            random = True
-        self.initiateGrid(random)
+        self.random = random
+        self.initiateGrid(self.random)
 
     def move(self,key: tuple) -> bool:
         """
@@ -74,7 +90,7 @@ class Puzzle:
             while i < 9:
                 time.Clock().tick(60)
                 k = event.get([KEYDOWN,QUIT])
-                self.screen.blit(cursor,(self.rec.x+ 35 + (c*(self.WIDTH/3 + 4)),self.rec.y - 10 + (j*(self.HEIGHT/3 + 4))))
+                self.screen.blit(cursor,(self.puzzle_BG_rect.x+ 35 + (c*(self.PUZZLE_WIDTH/3 + 4)),self.puzzle_BG_rect.y - 10 + (j*(self.PUZZLE_HEIGHT/3 + 4))))
                 display.update()
                 while len(k) < 1:
                     k = event.get([KEYDOWN,QUIT])
@@ -87,7 +103,7 @@ class Puzzle:
                             if num == 0:
                                 blank = (j,c)
                             grid[j][c] = num
-                            tile = Puzzle.Tile(self.rec.x+ (c*(self.WIDTH/3 + 4)),self.rec.y + (j*(self.HEIGHT/3 + 4)),num)
+                            tile = Puzzle.Tile(self.puzzle_BG_rect.x+ (c*(self.PUZZLE_WIDTH/3)),self.puzzle_BG_rect.y + (j*(self.PUZZLE_HEIGHT/3)),num)
                             self.Tiles[j][c] = tile
                             self.drawTile(tile)
                             i += 1
@@ -104,7 +120,7 @@ class Puzzle:
                 num = grid[i//3][i%3]
                 if blank is None and num == 0:
                     blank = ((i//3),(i%3))
-                tile = Puzzle.Tile(self.rec.x + ((i%3)*(self.WIDTH/3 + 4)),self.rec.y + ((i//3)*(self.HEIGHT/3 + 4)), num)
+                tile = Puzzle.Tile(self.puzzle_BG_rect.x + ((i%3)*(self.PUZZLE_WIDTH/3)),self.puzzle_BG_rect.y + ((i//3)*(self.PUZZLE_HEIGHT/3)), num)
                 self.drawTile(tile)
                 self.Tiles[(i//3)][(i%3)] = tile
 
@@ -125,13 +141,13 @@ class Puzzle:
         exit()
 
     def drawTile(self,t):
-        tile = Rect(t.x,t.y,153,153)
+        tile = Rect(t.x, t.y, ((self.PUZZLE_WIDTH-(2*self.INBTWN_SPACE))//3), ((self.PUZZLE_HEIGHT-(2*self.INBTWN_SPACE))//3)-self.INBTWN_SPACE)
         if t.num > 0:
-            text = self.fnt.render(str(t.num),1,self.BLACK)
-            draw.rect(self.screen,(self.WHITE),tile)
+            text = self.fnt.render(str(t.num), 1, self.BLACK)
+            draw.rect(self.screen,(self.TILE_COLOR),tile)
             self.screen.blit(text,(t.x+35,t.y))
         else:
-            draw.rect(self.screen,(self.GREY),tile)
+            draw.rect(self.screen,(self.PUZZLE_COLOR),tile)
         display.update()
 
     def drawSwap(self,blank: tuple,num: tuple) -> None:
@@ -140,7 +156,6 @@ class Puzzle:
         tile_b.swap(tile_n)
         self.drawTile(tile_n)
         self.drawTile(tile_b)
-
 
     def won(self):
         i = 0
