@@ -7,18 +7,21 @@ from buttons import Button
 
 SCREEN_WIDTH = 600
 SCREEN_HEIGHT = 600
-BUTTON_WIDTH = 400
+BUTTON_WIDTH = 500
 BUTTON_HEIGHT = 100
 BACK_GRND_COLOR = (255,255,255)
 RED = (123,44,130)
 bg = pygame.image.load("BG.png")
+
 start_player = False
 agent_selected = None
 generate_random = False
 A_star_type = None
+
 font_size = 50
 text_size = 30
-padding = 4
+padding = 20
+
 def start_window():
     global start_player
     buttons = []
@@ -162,7 +165,6 @@ pygame.display.set_icon(icon)
 
 start_window()
 
-
 if start_player:
     generating_window()
     p = Puzzle(game_screen, generate_random, bg)
@@ -172,22 +174,20 @@ else:
     AI_window()
     generating_window()
     if agent_selected != None:
-        
+        p = Puzzle(game_screen, generate_random, bg)
         if agent_selected == 0:
-            p = Puzzle(game_screen, generate_random, bg)
             agent = SearchAgent.DFS(p.state)
         elif agent_selected == 1:
-            p = Puzzle(game_screen, generate_random, bg)
             agent = SearchAgent.BFS(p.state)
         elif agent_selected == 2:
             A_Star_window()
-            p = Puzzle(game_screen, generate_random, bg)
             agent = SearchAgent.AStar(p.state)
+
         c = SearchAgent.timer(agent.search)
         print(str(c[0])+" s")
         res = c[1]
         s = "Total number of moves: " + str(len(res.moves)-1)
-        if messagebox.askyesno("display moves","display solution moves?\n"+s):
+        if messagebox.askyesno("Display moves","Display solution moves?\n"+s):
             i = 0
             while i+1 < len(res.moves):
                 p.drawSwap(res.moves[i],res.moves[i+1])
